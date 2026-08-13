@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyectos — Castillocine</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0B0B;
+    --bg-panel:#131313;
+    --fg:#E6E6E6;
+    --fg-dim:rgba(230,230,230,0.55);
+    --fg-faint:rgba(230,230,230,0.12);
+    --accent:#ED8002;
+    --font:'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.5;overflow-x:hidden;}
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--accent);color:var(--bg);}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 32px;}
+
+  .playhead{position:fixed;top:0;left:0;height:2px;width:0%;background:var(--accent);z-index:200;transition:width .08s linear;}
+
+  /* ---------- nav (idéntico a la Home) ---------- */
+  header.nav{
+    position:fixed;top:0;left:0;right:0;z-index:150;
+    background:rgba(11,11,11,0.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--fg-faint);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;max-width:1240px;margin:0 auto;}
+  .logo{font-weight:700;font-size:1.05rem;letter-spacing:0.02em;}
+  .logo span{color:var(--accent);}
+  .nav-links{display:flex;align-items:center;gap:36px;font-size:0.92rem;font-weight:500;}
+  .nav-links a{position:relative;color:var(--fg-dim);transition:color .25s ease;padding:4px 0;}
+  .nav-links a::after{content:'';position:absolute;left:0;bottom:-2px;width:0%;height:1px;background:var(--accent);transition:width .25s ease;}
+  .nav-links a:hover,.nav-links a:focus-visible{color:var(--fg);}
+  .nav-links a:hover::after,.nav-links a:focus-visible::after{width:100%;}
+  .nav-links a.current{color:var(--accent);}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center; /* NUEVO: Centra el texto "Cotizar" */
+    min-width: 155px;       /* NUEVO: Obliga al botón a mantener un tamaño ancho */
+    gap:8px;
+    font-family:var(--font);
+    font-weight:700;
+    font-size:0.88rem;
+    letter-spacing:0.01em;
+    padding:12px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:transform .2s ease, background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .btn-solid{
+    background:var(--accent);
+    color:#342009 !important;
+  }
+  .btn-solid:hover{
+    background:#ff9a1f;
+    transform:translateY(-1px);
+  }
+  .btn-ghost{
+    border-color:var(--fg-faint);
+    color:var(--fg);
+    background:transparent;
+  }
+  .btn-ghost:hover{
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;}
+  .hamburger span{width:22px;height:1.5px;background:var(--fg);transition:transform .25s ease, opacity .25s ease;}
+
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;font-size:0.78rem;font-weight:500;letter-spacing:0.08em;
+    color:var(--accent);font-variant-numeric:tabular-nums;margin-bottom:22px;text-transform:uppercase;
+  }
+  .eyebrow::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+  /* ---------- header de página ---------- */
+  .page-head{padding:150px 0 44px;}
+  .page-head h1{font-size:clamp(2.2rem, 4.6vw, 3.6rem);font-weight:900;letter-spacing:-0.02em;max-width:16ch;}
+  .page-head p{margin-top:20px;max-width:52ch;color:var(--fg-dim);font-size:1.02rem;}
+
+  /* ---------- filtros ---------- */
+  .filters-row{
+    display:flex;gap:10px;flex-wrap:wrap;padding:0 0 52px;
+    border-bottom:1px solid var(--fg-faint);
+  }
+  .filter-tab{
+    font-family:var(--font);font-size:0.8rem;font-weight:600;letter-spacing:0.02em;
+    padding:9px 16px;border:1px solid var(--fg-faint);color:var(--fg-dim);background:transparent;
+    cursor:pointer;transition:all .2s ease;
+  }
+  .filter-tab.active,.filter-tab:hover{border-color:var(--accent);color:var(--accent);}
+  .result-count{
+    margin-left:auto;font-size:0.78rem;color:var(--fg-dim);align-self:center;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- grid de proyectos ---------- */
+  .projects-listing{
+    padding:56px 0 120px;
+    display:grid;grid-template-columns:repeat(2,1fr);gap:3px;
+  }
+  .project-card{
+    position:relative;
+    aspect-ratio:16/10.5;
+    overflow:hidden;
+    background:var(--bg-panel);
+    display:block;
+    cursor:pointer;
+  }
+  .project-card .media{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 60% 55% at 30% 25%, rgba(237,128,2,0.16), transparent 60%),
+      linear-gradient(160deg, #171717, #0b0b0b);
+    transform:scale(1);
+    transition:transform .6s cubic-bezier(0.16,1,0.3,1), filter .4s ease;
+  }
+  .project-card:hover .media{transform:scale(1.06);filter:brightness(1.1);}
+
+  .project-card .media img,
+  .project-card .media video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  }
+
+  .project-card::before{
+    content:'';position:absolute;inset:0;z-index:1;
+    background:linear-gradient(180deg, transparent 35%, rgba(11,11,11,0.92) 100%);
+    transition:opacity .35s ease;
+  }
+
+  .project-card .tc{
+    position:absolute;top:18px;left:20px;z-index:2;
+    font-size:0.72rem;color:var(--fg-dim);font-variant-numeric:tabular-nums;
+    letter-spacing:0.06em;opacity:0;transform:translateY(-6px);
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .project-card:hover .tc{opacity:1;transform:translateY(0);}
+
+  .project-card .play{
+    position:absolute;top:20px;right:20px;z-index:2;
+    width:44px;height:44px;border-radius:50%;
+    border:1px solid var(--fg-faint);
+    background:rgba(11,11,11,0.4);
+    backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:scale(0.85);
+    transition:opacity .3s ease, transform .3s ease, border-color .3s ease;
+  }
+  .project-card:hover .play{opacity:1;transform:scale(1);border-color:var(--accent);}
+  .project-card .play::after{
+    content:'';width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;
+    border-left:11px solid var(--accent);margin-left:3px;
+  }
+
+  .project-card .info{
+    position:absolute;left:24px;right:24px;bottom:22px;z-index:2;
+    transition:transform .35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .project-card:hover .info{transform:translateY(-4px);}
+  .project-card .tag{
+    display:block;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:8px;
+  }
+  .project-card h3{
+    font-size:1.5rem;font-weight:700;color:var(--fg);letter-spacing:-0.01em;
+    display:flex;align-items:center;gap:10px;
+  }
+  .project-card h3 .arrow{
+    font-size:1.1rem;opacity:0;transform:translateX(-6px);
+    transition:opacity .3s ease, transform .3s ease;
+    color:var(--accent);
+  }
+  .project-card:hover h3 .arrow{opacity:1;transform:translateX(0);}
+  .project-card .client{
+    font-size:0.85rem;color:var(--fg-dim);margin-top:4px;
+  }
+
+  /* ---------- CTA cierre ---------- */
+  .cta-invert{
+    background:var(--fg);color:var(--bg);border-top:1px solid var(--fg-faint);padding:100px 0;text-align:center;
+  }
+  .cta-invert h2{
+    font-size:clamp(1.8rem, 3.6vw, 2.6rem);font-weight:900;letter-spacing:-0.02em;
+    max-width:16ch;margin:0 auto 34px;
+  }
+  .cta-invert h2 em{font-style:normal;color:var(--accent);}
+  .cta-invert .btn-solid{color:var(--bg);}
+  .cta-invert .btn-solid:hover{background:#c96f00;}
+
+  /* ---------- footer (idéntico a la Home) ---------- */
+  footer{padding:56px 0 40px;border-top:1px solid var(--fg-faint);}
+  .footer-inner{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:24px;}
+  .footer-links{display:flex;gap:26px;font-size:0.85rem;}
+  .footer-links a{color:var(--fg-dim);transition:color .2s;}
+  .footer-links a:hover{color:var(--accent);}
+  .footer-meta{font-size:0.75rem;color:var(--fg-dim);margin-top:6px;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:860px){
+    .nav-links{
+      position:fixed;top:64px;right:0;height:calc(100svh - 64px);width:78%;max-width:320px;
+      background:#0d0d0d;border-left:1px solid var(--fg-faint);
+      flex-direction:column;align-items:flex-start;justify-content:flex-start;
+      padding:40px 28px;gap:28px;transform:translateX(100%);transition:transform .3s ease;
+    }
+    .nav-links.open{transform:translateX(0);}
+    .nav-links .btn{margin-top:12px;}
+    .hamburger{display:flex;}
+    .projects-listing{grid-template-columns:1fr;}
+    .result-count{margin-left:0;width:100%;order:99;}
+    .wrap{padding:0 22px;}
+    .page-head{padding:120px 0 32px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="playhead" id="playhead"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">CASTILLO<span>CINE</span></a>
+    <nav class="nav-links" id="navLinks">
+      <a href="proyectos.html" class="current">Proyectos</a>
+      <a href="estudio.html">En el Estudio</a>
+      <a href="contacto.html">Contacto</a>
+      <a href="https://www.patreon.com/castillocine" target="_blank" rel="noopener noreferrer">Cursos</a>
+      <a href="calculadora.html" class="btn btn-solid">Cotizar mi proyecto</a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="wrap page-head">
+  <div class="eyebrow">00:00:00:00 / Selección</div>
+  <h1>Proyectos</h1>
+  <p>Casos de estudio en publicidad, cine, motion y VFX. Explora las vistas previas en movimiento de cada proyecto y haz click para entrar al caso completo.</p>
+</div>
+
+<div class="wrap filters-row">
+  <button class="filter-tab active" data-filter="all">Todo</button>
+  <button class="filter-tab" data-filter="publicidad">Publicidad</button>
+  <button class="filter-tab" data-filter="cine">Cine</button>
+  <button class="filter-tab" data-filter="motion">Motion</button>
+  <button class="filter-tab" data-filter="vfx">3D / CGI / IA</button>
+  <span class="result-count" id="resultCount">6 proyectos</span>
+</div>
+
+<div class="wrap">
+  <div class="projects-listing" id="projectsGrid">
+
+    <a href="infoguia.html" class="project-card" data-cat="publicidad">
+      <div class="media">
+      <video autoplay loop muted playsinline poster="videos/infoguia-miniatura-img-monetiza.jpg">
+      <source src="videos/infoguia-preview-monetiza.mp4" type="video/mp4">
+    </video>
+  </div>
+      <span class="tc">00:00:30:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Publicidad</span>
+        <h3>Monetiza con Infoguia<span class="arrow">→</span></h3>
+        <div class="client">30" · Motion Graphics, Edición</div>
+      </div>
+    </a>
+
+    <a href="genio.html" class="project-card" data-cat="motion">
+      <div class="media"><video autoplay loop muted playsinline poster="videos/infoguia-miniatura-img-genio.jpg">
+      <source src="videos/infoguia-preview-genio.mp4" type="video/mp4">
+    </video>
+  </div>
+      <span class="tc">00:01:00:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Motion</span>
+        <h3>El Genio de la Lámpara Mágica <span class="arrow">→</span></h3>
+        <div class="client">1 min · Animación 2D, Edición, Sound Design</div>
+      </div>
+    </a>
+
+    <a href="cristal.html" class="project-card" data-cat="cine">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/cristal-miniatura-img-peli.jpg">
+      <source src="videos/cristal-preview-peli.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">01:17:00:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Cine</span>
+        <h3>Largometraje Cristal <span class="arrow">→</span></h3>
+        <div class="client">77 min · Montaje, Color Grading, VFX</div>
+      </div>
+    </a>
+
+    <a href="pila.html" class="project-card" data-cat="vfx">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/philips-miniatura-img-pila.jpg">
+      <source src="videos/philips-preview-pila.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:00:56:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">3D / CGI</span>
+        <h3>Reciclaje Pilas Philips <span class="arrow">→</span></h3>
+        <div class="client">56" · Modelado 3D, Animación CGI, Composición VFX</div>
+      </div>
+    </a>
+
+    <a href="guiba.html" class="project-card" data-cat="publicidad">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/guiba-miniatura-img.jpg">
+      <source src="videos/guiba-preview.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:01:30:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Publicidad</span>
+        <h3>Guiba Fraccionamiento <span class="arrow">→</span></h3>
+        <div class="client">1 min 30 seg · Edición, Motion Graphics, Camera Tracking</div>
+      </div>
+    </a>
+
+    <a href="incendio.html" class="project-card" data-cat="vfx">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/mrhood-miniatura-img-incendio.jpg">
+      <source src="videos/mrhood-preview-incendio.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:00:52:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">3D / VFX</span>
+        <h3>Mr. Hood <span class="arrow">→</span></h3>
+        <div class="client">52 " · 3D, Composición, CGI</div>
+      </div>
+    </a>
+
+    <a href="ranking.html" class="project-card" data-cat="publicidad">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/ranking-miniatura-img.jpg">
+      <source src="videos/ranking-preview.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:00:56:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Publicidad</span>
+        <h3>Facturación Electrónica<span class="arrow">→</span></h3>
+        <div class="client">56 " · Edición, Motion Graphics</div>
+      </div>
+    </a>
+
+    <a href="villamarina.html" class="project-card" data-cat="publicidad">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/villamarina-miniatura-img.jpg">
+      <source src="videos/villamarina-preview.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:01:13:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Publicidad</span>
+        <h3>Villa Marina<span class="arrow">→</span></h3>
+        <div class="client">1 min 13 seg · Edición, Motion Graphics</div>
+      </div>
+    </a>
+
+    <a href="toyotaguatire.html" class="project-card" data-cat="publicidad">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/toyotaguatire-miniatura-img.jpg">
+      <source src="videos/toyotaguatire-preview.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:01:00:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Publicidad</span>
+        <h3>Toyota Guatire<span class="arrow">→</span></h3>
+        <div class="client">1 min · Edición UGC / Lifestyle</div>
+      </div>
+    </a>
+
+    <a href="almavideomusical.html" class="project-card" data-cat="cine">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/alma-miniatura-img.jpg">
+      <source src="videos/alma-preview.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:03:51:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Video Musical</span>
+        <h3>"Ya bajó Pacheco" con Alma<span class="arrow">→</span></h3>
+        <div class="client">3 min 51 seg · Edición Musical</div>
+      </div>
+    </a>
+
+    <a href="micropecron.html" class="project-card" data-cat="vfx">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/copikon-miniatura-img-pecron.jpg">
+      <source src="videos/copikon-preview-pecron.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:03:20:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">AI CONTENT</span>
+        <h3>Válgame Pecron<span class="arrow">→</span></h3>
+        <div class="client">3 min 20 seg · Generación Visual con IA</div>
+      </div>
+    </a>
+
+    <a href="reinon.html" class="project-card" data-cat="motion">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/reinontrip-miniatura-img.jpg">
+      <source src="videos/reinontrip-preview.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:01:30:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">ANIMACIÓN 2D & MUSIC VIDEO</span>
+        <h3>Reinontrip — Agustina Pontoriero<span class="arrow">→</span></h3>
+        <div class="client">1 min 30 seg · Animación 2D, Motion Graphics</div>
+      </div>
+    </a>
+
+    <a href="btox.html" class="project-card" data-cat="vfx">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/btox-miniatura-img.jpg">
+      <source src="videos/btox-preview.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:01:02:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">CGI / VFX & COMMERCIAL</span>
+        <h3>B-Tox de Soler Pharma<span class="arrow">→</span></h3>
+        <div class="client">1 min 2 seg · Animación 3D, CGI</div>
+      </div>
+    </a>
+
+    <a href="mater.html" class="project-card" data-cat="motion">
+      <div class="media">
+        <video autoplay loop muted playsinline poster="videos/mater-miniatura-img.jpg">
+      <source src="videos/mater-preview.mp4" type="video/mp4">
+    </video>
+      </div>
+      <span class="tc">00:06:39:00</span>
+      <span class="play"></span>
+      <div class="info">
+        <span class="tag">Motion Graphics</span>
+        <h3>Visuales Mater Salvatoris<span class="arrow">→</span></h3>
+        <div class="client">6 min 39 seg · Motion Graphics, Diseño de Loop</div>
+      </div>
+    </a>
+
+
+  </div>
+</div>
+
+<section class="cta-invert">
+  <div class="wrap">
+    <h2>¿Tu marca necesita <em>una pieza como estas</em>?</h2>
+    <a href="calculadora.html" class="btn btn-solid">Cotizar mi proyecto</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div>
+      <div class="logo">CASTILLO<span>CINE</span></div>
+      <div class="footer-meta">Caracas, Venezuela — Disponible para proyectos remotos</div>
+    </div>
+    <nav class="footer-links">
+      <a href="proyectos.html">Proyectos</a>
+      <a href="estudio.html">En el Estudio</a>
+      <a href="contacto.html">Contacto</a>
+      <a href="https://www.patreon.com/castillocine" target="_blank" rel="noopener noreferrer">Cursos</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  const playhead = document.getElementById('playhead');
+  function updatePlayhead(){
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    playhead.style.width = scrolled + '%';
+  }
+  document.addEventListener('scroll', updatePlayhead, {passive:true});
+  updatePlayhead();
+
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => {
+    const open = navLinks.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded', open);
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', 'false');
+  }));
+
+  // Filtro por categoría + contador de resultados
+  const tabs = document.querySelectorAll('.filter-tab');
+  const cards = document.querySelectorAll('.project-card');
+  const resultCount = document.getElementById('resultCount');
+
+  function applyFilter(filter){
+    let visible = 0;
+    cards.forEach(card => {
+      const match = filter === 'all' || card.dataset.cat === filter;
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    resultCount.textContent = visible + (visible === 1 ? ' proyecto' : ' proyectos');
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      applyFilter(tab.dataset.filter);
+    });
+  });
+</script>
+
+</body>
+</html>

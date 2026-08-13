@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toyota Guatire — Castillocine</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0B0B;
+    --bg-panel:#131313;
+    --bg-panel-2:#171717;
+    --fg:#E6E6E6;
+    --fg-dim:rgba(230,230,230,0.55);
+    --fg-faint:rgba(230,230,230,0.12);
+    --accent:#ED8002;
+    --accent-dim:rgba(237,128,2,0.35);
+    --font:'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--font);
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  ::selection{background:var(--accent);color:var(--bg);}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+
+  .wrap{max-width:1240px;margin:0 auto;padding:0 32px;}
+
+  /* ---------- scroll progress (playhead) ---------- */
+  .playhead{
+    position:fixed;top:0;left:0;height:2px;width:0%;
+    background:var(--accent);z-index:200;transition:width .08s linear;
+  }
+
+  /* ---------- nav (idéntico a la Home) ---------- */
+  header.nav{
+    position:fixed;top:0;left:0;right:0;z-index:150;
+    background:rgba(11,11,11,0.7);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--fg-faint);
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 32px;max-width:1240px;margin:0 auto;
+  }
+  .logo{font-weight:700;font-size:1.05rem;letter-spacing:0.02em;}
+  .logo span{color:var(--accent);}
+  .nav-links{display:flex;align-items:center;gap:36px;font-size:0.92rem;font-weight:500;}
+  .nav-links a{position:relative;color:var(--fg-dim);transition:color .25s ease;padding:4px 0;}
+  .nav-links a::after{
+    content:'';position:absolute;left:0;bottom:-2px;width:0%;height:1px;
+    background:var(--accent);transition:width .25s ease;
+  }
+  .nav-links a:hover,.nav-links a:focus-visible{color:var(--fg);}
+  .nav-links a:hover::after,.nav-links a:focus-visible::after{width:100%;}
+  .nav-links a.current{color:var(--accent);}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width: 155px;
+    gap:8px;
+    font-family:var(--font);
+    font-weight:700;
+    font-size:0.88rem;
+    letter-spacing:0.01em;
+    padding:12px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:transform .2s ease, background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .btn-solid{
+    background:var(--accent);
+    color:#342009 !important;
+  }
+  .btn-solid:hover{background:#ff9a1f;transform:translateY(-1px);}
+  .btn-ghost{border-color:var(--fg-faint);color:var(--fg);background:transparent;}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+
+  .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;}
+  .hamburger span{width:22px;height:1.5px;background:var(--fg);transition:transform .25s ease, opacity .25s ease;}
+
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;font-size:0.78rem;font-weight:500;
+    letter-spacing:0.08em;color:var(--accent);font-variant-numeric:tabular-nums;
+    margin-bottom:22px;text-transform:uppercase;
+  }
+  .eyebrow::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+  /* ---------- breadcrumb / back ---------- */
+  .project-top{padding:150px 0 28px;}
+  .back-link{
+    display:inline-flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--fg-dim);
+    transition:color .2s ease;
+  }
+  .back-link:hover{color:var(--accent);}
+  .back-link svg{width:14px;height:14px;}
+
+  /* ---------- header del proyecto ---------- */
+  .project-head{padding-bottom:40px;}
+  .project-head h1{
+    font-size:clamp(2rem, 4.4vw, 3.4rem);
+    font-weight:900;letter-spacing:-0.02em;max-width:18ch;margin-top:14px;
+  }
+  .project-meta-row{
+    display:flex;flex-wrap:wrap;gap:34px;margin-top:32px;
+    border-top:1px solid var(--fg-faint);padding-top:24px;
+  }
+  .project-meta-row .m{display:flex;flex-direction:column;gap:6px;}
+  .project-meta-row .m .label{
+    font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-dim);
+  }
+  .project-meta-row .m .val{font-size:0.98rem;font-weight:500;color:var(--fg);}
+
+  /* ---------- reproductor principal ---------- */
+  .player-section{padding-top:8px;}
+  .player{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    background:
+      radial-gradient(ellipse 60% 60% at 30% 30%, rgba(237,128,2,0.10), transparent 60%),
+      #101010;
+    border:1px solid var(--fg-faint);
+    overflow:hidden;
+  }
+  /* Reemplazar por: <video controls poster="thumb.jpg"><source src="lumen.mp4" type="video/mp4"></video> */
+  .player video{width:100%;height:100%;object-fit:cover;opacity:0;position:absolute;inset:0;}
+  .player .plate{position:absolute;inset:0;}
+  .player .play-btn{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:84px;height:84px;border-radius:50%;
+    border:1px solid var(--fg-faint);
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(11,11,11,0.5);
+    backdrop-filter:blur(6px);
+    transition:border-color .25s ease, transform .25s ease;
+    cursor:pointer;
+  }
+  .player .play-btn:hover{border-color:var(--accent);transform:translate(-50%,-50%) scale(1.06);}
+  .player .play-btn::after{
+    content:'';width:0;height:0;
+    border-top:11px solid transparent;border-bottom:11px solid transparent;
+    border-left:16px solid var(--accent);margin-left:5px;
+  }
+  .player .tc{
+    position:absolute;left:20px;bottom:18px;
+    font-size:0.75rem;color:var(--fg-dim);font-variant-numeric:tabular-nums;
+    letter-spacing:0.06em;display:flex;align-items:center;gap:8px;
+  }
+  .player .tc .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+
+  /* ---------- secciones base ---------- */
+  section{position:relative;padding:96px 0;border-top:1px solid var(--fg-faint);}
+  .section-head{max-width:640px;margin-bottom:56px;}
+  .section-head h2{font-size:clamp(1.6rem, 2.8vw, 2.2rem);font-weight:700;letter-spacing:-0.01em;}
+
+  /* ---------- enfoque estratégico ---------- */
+  .strategy-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--fg-faint);border:1px solid var(--fg-faint);
+  }
+  .strategy-card{background:var(--bg);padding:38px 32px;}
+  .strategy-card .tc{
+    font-size:0.72rem;color:var(--fg-dim);font-variant-numeric:tabular-nums;
+    letter-spacing:0.06em;display:block;margin-bottom:20px;
+  }
+  .strategy-card h3{
+    font-size:1.15rem;font-weight:700;color:var(--accent);margin-bottom:14px;
+    letter-spacing:-0.01em;
+  }
+  .strategy-card p{font-size:0.96rem;color:var(--fg);line-height:1.65;}
+  .strategy-card p + p{margin-top:12px;color:var(--fg-dim);}
+
+  /* ---------- resultados destacados ---------- */
+  .results-row{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:56px;
+  }
+  .result-stat{border-left:1px solid var(--fg-faint);padding-left:20px;}
+  .result-stat .num{
+    font-size:2.2rem;font-weight:900;color:var(--accent);letter-spacing:-0.02em;
+    font-variant-numeric:tabular-nums;
+  }
+  .result-stat .lbl{font-size:0.85rem;color:var(--fg-dim);margin-top:6px;}
+
+  /* ---------- galería / proceso ---------- */
+  .gallery-tabs{
+    display:flex;gap:10px;margin-bottom:40px;flex-wrap:wrap;
+  }
+  .gallery-tab{
+    font-size:0.8rem;font-weight:600;letter-spacing:0.02em;
+    padding:9px 16px;border:1px solid var(--fg-faint);color:var(--fg-dim);
+    background:transparent;cursor:pointer;transition:all .2s ease;
+    font-family:var(--font);
+  }
+  .gallery-tab.active,.gallery-tab:hover{border-color:var(--accent);color:var(--accent);}
+
+  .gallery-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+  }
+  .gallery-grid.wide-first .g-item:first-child{grid-column:span 2;grid-row:span 2;}
+  .g-item{
+    position:relative;aspect-ratio:4/3;overflow:hidden;cursor:pointer;
+    background:
+      radial-gradient(ellipse at 40% 30%, rgba(237,128,2,0.12), transparent 65%),
+      #141414;
+  }
+  .gallery-grid.wide-first .g-item:first-child{aspect-ratio:auto;}
+  .g-item::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg, transparent 55%, rgba(11,11,11,0.85) 100%);}
+  .g-item .g-label{
+    position:absolute;left:16px;bottom:14px;z-index:2;
+    font-size:0.75rem;color:var(--fg);letter-spacing:0.02em;
+  }
+  .g-item .g-tag{
+    position:absolute;top:14px;left:16px;z-index:2;
+    font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);
+  }
+  .g-item .zoom{
+    position:absolute;top:14px;right:16px;z-index:2;
+    width:30px;height:30px;border-radius:50%;border:1px solid var(--fg-faint);
+    display:flex;align-items:center;justify-content:center;opacity:0;
+    transition:opacity .25s ease, border-color .25s ease;
+  }
+  .g-item:hover .zoom{opacity:1;border-color:var(--accent);}
+  .g-item:hover{filter:brightness(1.08);
+  }
+  .g-item img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
+/* Esto le devuelve el degradado oscuro abajo manteniendo la foto visible */
+.g-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.75) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.g-item span {
+  position: relative;
+  z-index: 2;
+}
+  /* ---------- navegación entre proyectos ---------- */
+  .project-nav{
+    display:grid;grid-template-columns:1fr 1fr;
+  }
+  .project-nav a{
+    padding:44px 40px;position:relative;
+    transition:background .25s ease;
+  }
+  .project-nav a:first-child{border-right:1px solid var(--fg-faint);}
+  .project-nav a:hover{background:var(--bg-panel);}
+  .project-nav .dir{
+    font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);
+    display:block;margin-bottom:10px;
+  }
+  .project-nav .name{font-size:1.2rem;font-weight:700;}
+  .project-nav a:last-child{text-align:right;}
+
+  /* ---------- CTA cierre ---------- */
+  .cta-invert{
+    background:var(--fg);color:var(--bg);border-top:none;padding:100px 0;text-align:center;
+  }
+  .cta-invert h2{
+    font-size:clamp(1.8rem, 3.6vw, 2.6rem);font-weight:900;letter-spacing:-0.02em;
+    max-width:16ch;margin:0 auto 34px;
+  }
+  .cta-invert h2 em{font-style:normal;color:var(--accent);}
+  .cta-invert .btn-solid{color:var(--bg);}
+  .cta-invert .btn-solid:hover{background:#c96f00;}
+
+  /* ---------- footer (idéntico a la Home) ---------- */
+  footer{padding:56px 0 40px;border-top:1px solid var(--fg-faint);}
+  .footer-inner{
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:24px;
+  }
+  .footer-links{display:flex;gap:26px;font-size:0.85rem;}
+  .footer-links a{color:var(--fg-dim);transition:color .2s;}
+  .footer-links a:hover{color:var(--accent);}
+  .footer-meta{font-size:0.75rem;color:var(--fg-dim);margin-top:6px;}
+
+  /* ---------- lightbox ---------- */
+  .lightbox{
+    position:fixed;inset:0;background:rgba(11,11,11,0.96);
+    display:none;align-items:center;justify-content:center;z-index:300;padding:40px;
+  }
+  .lightbox.open{display:flex;}
+  .lightbox-frame{
+    max-width:1000px;width:100%;aspect-ratio:16/10;
+    background:radial-gradient(ellipse at 40% 30%, rgba(237,128,2,0.14), transparent 65%), #141414;
+    border:1px solid var(--fg-faint);position:relative;
+  }
+  .lightbox-close{
+    position:absolute;top:-46px;right:0;
+    background:none;border:1px solid var(--fg-faint);color:var(--fg);
+    width:38px;height:38px;border-radius:50%;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  }
+  .lightbox-close:hover{border-color:var(--accent);color:var(--accent);
+  }
+  .lightbox-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:860px){
+    .nav-links{
+      position:fixed;top:64px;right:0;height:calc(100svh - 64px);width:78%;max-width:320px;
+      background:#0d0d0d;border-left:1px solid var(--fg-faint);
+      flex-direction:column;align-items:flex-start;justify-content:flex-start;
+      padding:40px 28px;gap:28px;transform:translateX(100%);transition:transform .3s ease;
+    }
+    .nav-links.open{transform:translateX(0);}
+    .nav-links .btn{margin-top:12px;}
+    .hamburger{display:flex;}
+    .strategy-grid,.results-row,.gallery-grid,.gallery-grid.wide-first,.project-nav{grid-template-columns:1fr;}
+    .gallery-grid.wide-first .g-item:first-child{grid-column:auto;grid-row:auto;aspect-ratio:4/3;}
+    .project-nav a:first-child{border-right:none;border-bottom:1px solid var(--fg-faint);}
+    .project-nav a:last-child{text-align:left;}
+    .wrap{padding:0 22px;}
+    section{padding:64px 0;}
+    .project-top{padding-top:120px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="playhead" id="playhead"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">CASTILLO<span>CINE</span></a>
+    <nav class="nav-links" id="navLinks">
+      <a href="proyectos.html" class="current">Proyectos</a>
+      <a href="estudio.html">En el Estudio</a>
+      <a href="contacto.html">Contacto</a>
+      <a href="https://www.patreon.com/castillocine" target="_blank" rel="noopener noreferrer">Cursos</a>
+      <a href="calculadora.html" class="btn btn-solid">Cotizar mi proyecto</a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="wrap project-top">
+  <a href="proyectos.html" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Volver a Poyectos
+  </a>
+
+  <div class="project-head">
+    <div class="eyebrow">Publicidad</div>
+    <h1>Experiencia Test Drive Toyota Guatire x Creator Co-Branding</h1>
+
+    <div class="project-meta-row">
+      <div class="m"><span class="label">Cliente</span><span class="val">Toyota Guatire</span></div>
+      <div class="m"><span class="label">Servicios</span><span class="val">Edición UGC / Lifestyle</span></div>
+      <div class="m"><span class="label">Año</span><span class="val">2026</span></div>
+      <div class="m"><span class="label">Duración</span><span class="val">1 minuto</span></div>
+      <div class="m"><span class="label">Herramientas</span><span class="val">Premiere</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap player-section">
+  <div class="player">
+    <iframe 
+      width="100%" 
+      height="100%" 
+      style="position:absolute; top:0; left:0;" 
+      src="https://www.youtube.com/embed/MIpIfkgekk4" 
+      title="Reproductor de YouTube" 
+      frameborder="0" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowfullscreen>
+    </iframe>
+  </div>
+</div>
+
+<section class="strategy-section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">00:01:20:00 / Enfoque Estratégico</div>
+      <h2>Transformando un evento de concesionario en una narrativa aspiracional de alto impacto visual</h2>
+    </div>
+
+    <div class="strategy-grid">
+      <div class="strategy-card">
+        <span class="tc">01 — Contexto</span>
+        <h3>El Reto del Cliente</h3>
+        <p>Toyota Guatire y la comunidad de creadoras de contenido necesitaban mostrar la experiencia completa del evento Test Drive (modelos Agya y Yaris 2026), así como las instalaciones de posventa, repuestos originales y boutique del concesionario.</p>
+        <p>El objetivo real: Conectar emocionalmente con la audiencia mediante un relato aspiracional ("visualizar tu primer 0 km"), evitando la sensación de un comercial frío y transformándolo en un recorrido dinámico y cercano.</p>
+      </div>
+      <div class="strategy-card">
+        <span class="tc">02 — Decisión</span>
+        <h3>La Estrategia de Postproducción</h3>
+        <p>Se estructuró una edición con ritmo musical marcado (beat-matching), alternando cortes ágiles de la experiencia de manejo con inserts rápidos del concesionario y detalles del vehículo.</p>
+        <p>Se incorporaron efectos de sonido inmersivos (Swooshes, clicks, encendido de motor) para potenciar las acciones de cámara, junto con titulación cinética pop-up para resaltar las especificaciones técnicas (motor 1.5, botón de encendido, 5 años de garantía) e hipervínculos visuales tipo perfil de Instagram para autenticar el co-branding.</p>
+      </div>
+      <div class="strategy-card">
+        <span class="tc">03 — Entrega</span>
+        <h3>Resultados e Impacto</h3>
+        <p>Se entregó una pieza en formato vertical (9:16) optimizada para Instagram Reels y TikTok.</p>
+        <p>Un video con alta retención que equilibra la emoción de la experiencia personal con el valor comercial de la marca, guiando al espectador hacia el deseo de probar y adquirir su propio vehículo.</p>
+      </div>
+    </div>
+
+    <div class="results-row">
+      <div class="result-stat"><div class="num">1 min</div><div class="lbl">Ritmo constante que mantiene la atención combinando historia y especificaciones.</div></div>
+      <div class="result-stat"><div class="num">High Engagement</div><div class="lbl">Integración nativa de creador de contenido y experiencia de marca.</div></div>
+      <div class="result-stat"><div class="num">100% Lifestyle</div><div class="lbl">Estética aspiracional enfocada en emoción, acabados y lifestyle.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="gallery-section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">00:02:40:00 / Detrás del Corte</div>
+      <h2>Galería y proceso</h2>
+    </div>
+
+    <div class="gallery-tabs">
+      <button class="gallery-tab active" data-filter="all">Todo</button>
+      <button class="gallery-tab" data-filter="stills">Miniaturas</button>
+      <button class="gallery-tab" data-filter="timeline">Línea de tiempo</button>
+    </div>
+
+    <div class="gallery-grid wide-first" id="galleryGrid">
+      <div class="g-item" data-cat="stills"><img src="img/toyotaguatire1.jpg" alt="Versión A"><span class="zoom"></span><span class="g-tag">Miniatura</span><span class="g-label">Boutique Toyota</span></div>
+      <div class="g-item" data-cat="stills"><img src="img/toyotaguatire2.jpg" alt="Versión B"><span class="zoom"></span><span class="g-tag">Miniatura</span><span class="g-label">Detalles del vehículo</span></div>
+      <div class="g-item" data-cat="timeline"><img src="img/toyotaguatire4.jpg" alt="Timeline AE"><span class="zoom"></span><span class="g-tag">Timeline</span><span class="g-label">Edición — Premier</span></div>
+      <div class="g-item" data-cat="stills"><img src="img/toyotaguatire3.jpg" alt="Versión C"><span class="zoom"></span><span class="g-tag">Miniatura</span><span class="g-label">Toyota Yaris</span></div>
+    </div>
+  </div>
+</section>
+
+<nav class="project-nav" aria-label="Navegación entre proyectos">
+  <a href="villamarina.html">
+    <span class="dir">← Proyecto anterior</span>
+    <span class="name">Villa Marina</span>
+  </a>
+  <a href="almavideomusical.html">
+    <span class="dir">Siguiente proyecto →</span>
+    <span class="name">Alma Video Musical</span>
+  </a>
+</nav>
+
+<section class="cta-invert">
+  <div class="wrap">
+    <h2>¿Tu marca necesita <em>una pieza como esta</em>?</h2>
+    <a href="calculadora.html" class="btn btn-solid">Cotizar mi proyecto</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div>
+      <div class="logo">CASTILLO<span>CINE</span></div>
+      <div class="footer-meta">Caracas, Venezuela — Disponible para proyectos remotos</div>
+    </div>
+    <nav class="footer-links">
+      <a href="proyectos.html">Proyectos</a>
+      <a href="estudio.html">En el Estudio</a>
+      <a href="contacto.html">Contacto</a>
+      <a href="https://www.patreon.com/castillocine" target="_blank" rel="noopener noreferrer">Cursos</a>
+    </nav>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-frame">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">✕</button>
+    <img id="lightboxImg" src="" alt="Ampliada">
+  </div>
+</div>
+
+<script>
+  const playhead = document.getElementById('playhead');
+  function updatePlayhead(){
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    playhead.style.width = scrolled + '%';
+  }
+  document.addEventListener('scroll', updatePlayhead, {passive:true});
+  updatePlayhead();
+
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => {
+    const open = navLinks.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded', open);
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', 'false');
+  }));
+
+  // Reproducción simulada del player principal (reemplazar con lógica real de <video>)
+  document.querySelector('.play-btn')?.addEventListener('click', function(){
+    this.style.opacity = '0';
+    // aquí: video.play();
+  });
+
+  // Filtro de galería
+  const tabs = document.querySelectorAll('.gallery-tab');
+  const items = document.querySelectorAll('.g-item');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const filter = tab.dataset.filter;
+      items.forEach(item => {
+        item.style.display = (filter === 'all' || item.dataset.cat === filter) ? '' : 'none';
+      });
+    });
+  });
+
+  // Lightbox dinámico
+  const lightbox = document.getElementById('lightbox');
+  const lightboxClose = document.getElementById('lightboxClose');
+  const lightboxImg = document.getElementById('lightboxImg');
+
+  items.forEach(item => {
+    item.addEventListener('click', () => {
+      const img = item.querySelector('img');
+      if (img) {
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt;
+        lightbox.classList.add('open');
+      }
+    });
+  });
+
+  lightboxClose.addEventListener('click', () => lightbox.classList.remove('open'));
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.classList.remove('open'); });
+</script>
+
+</body>
+</html>
