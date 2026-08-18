@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>En el Estudio — Castillocine</title>
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0B0B;
+    --bg-panel:#131313;
+    --fg:#E6E6E6;
+    --fg-dim:rgba(230,230,230,0.55);
+    --fg-faint:rgba(230,230,230,0.12);
+    --accent:#ED8002;
+    --font:'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.5;overflow-x:hidden;}
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--accent);color:var(--bg);}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 32px;}
+
+  .playhead{position:fixed;top:0;left:0;height:2px;width:0%;background:var(--accent);z-index:200;transition:width .08s linear;}
+
+  /* ---------- nav (idéntico a la Home) ---------- */
+  header.nav{
+    position:fixed;top:0;left:0;right:0;z-index:150;
+    background:rgba(11,11,11,0.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--fg-faint);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;max-width:1240px;margin:0 auto;}
+  .logo{font-weight:700;font-size:1.05rem;letter-spacing:0.02em;}
+  .logo span{color:var(--accent);}
+  .nav-links{display:flex;align-items:center;gap:36px;font-size:0.92rem;font-weight:500;}
+  .nav-links a{position:relative;color:var(--fg-dim);transition:color .25s ease;padding:4px 0;}
+  .nav-links a::after{content:'';position:absolute;left:0;bottom:-2px;width:0%;height:1px;background:var(--accent);transition:width .25s ease;}
+  .nav-links a:hover,.nav-links a:focus-visible{color:var(--fg);}
+  .nav-links a:hover::after,.nav-links a:focus-visible::after{width:100%;}
+  .nav-links a.current{color:var(--accent);}
+  
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center; /* NUEVO: Centra el texto "Cotizar" */
+    min-width: 155px;       /* NUEVO: Obliga al botón a mantener un tamaño ancho */
+    gap:8px;
+    font-family:var(--font);
+    font-weight:700;
+    font-size:0.88rem;
+    letter-spacing:0.01em;
+    padding:12px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:transform .2s ease, background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .btn-solid{
+    background:var(--accent);
+    color:#342009 !important;
+  }
+  .btn-solid:hover{background:#ff9a1f;transform:translateY(-1px);}
+  .btn-ghost{border-color:var(--fg-faint);color:var(--fg);background:transparent;}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;}
+  .hamburger span{width:22px;height:1.5px;background:var(--fg);transition:transform .25s ease, opacity .25s ease;}
+
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;font-size:0.78rem;font-weight:500;letter-spacing:0.08em;
+    color:var(--accent);font-variant-numeric:tabular-nums;margin-bottom:22px;text-transform:uppercase;
+  }
+  .eyebrow::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+  /* ---------- header de página ---------- */
+  .page-head{padding:150px 0 60px;border-bottom:1px solid var(--fg-faint);}
+  .page-head h1{font-size:clamp(2.2rem, 4.6vw, 3.6rem);font-weight:900;letter-spacing:-0.02em;max-width:18ch;}
+  .page-head p{margin-top:20px;max-width:54ch;color:var(--fg-dim);font-size:1.02rem;}
+
+  /* ---------- masonry BTS ---------- */
+  .bts-gallery{
+    padding:56px 0 120px;
+    column-count:3;
+    column-gap:3px;
+  }
+  .bts-card{
+    break-inside:avoid;
+    margin-bottom:3px;
+    position:relative;
+    overflow:hidden;
+    background:var(--bg-panel);
+    cursor:pointer;
+  }
+  .bts-card[data-h="tall"] .bts-media{aspect-ratio:3/4;}
+  .bts-card[data-h="portrait"] .bts-media{aspect-ratio:4/5;}
+  .bts-card[data-h="square"] .bts-media{aspect-ratio:1/1;}
+  .bts-card[data-h="wide"] .bts-media{aspect-ratio:16/10;}
+
+  .bts-media{
+    position:relative;width:100%;
+    background:
+      radial-gradient(ellipse 65% 55% at 32% 28%, rgba(237,128,2,0.13), transparent 62%),
+      linear-gradient(160deg, #161616, #0c0c0c);
+    filter:grayscale(0.15) contrast(1.02);
+    transition:filter .35s ease, transform .5s ease;
+  }
+  .bts-card:hover .bts-media{filter:grayscale(0) contrast(1.05) brightness(1.06);}
+  .bts-media::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(180deg, transparent 55%, rgba(11,11,11,0.88) 100%);
+    transition:opacity .3s ease;
+  }
+  .bts-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+  .bts-caption{
+    position:absolute;left:18px;right:18px;bottom:16px;z-index:2;
+    opacity:0.9;transition:opacity .3s ease;
+  }
+  .bts-caption .title{font-size:0.92rem;font-weight:500;color:var(--fg);line-height:1.35;}
+  .bts-zoom{
+    position:absolute;top:14px;right:16px;z-index:2;
+    width:30px;height:30px;border-radius:50%;border:1px solid rgba(230,230,230,0.25);
+    display:flex;align-items:center;justify-content:center;opacity:0;
+    transition:opacity .25s ease, border-color .25s ease;
+  }
+  .bts-card:hover .bts-zoom{opacity:1;border-color:var(--accent);}
+  .bts-zoom::before,.bts-zoom::after{content:'';position:absolute;background:var(--accent);}
+  .bts-zoom::before{width:10px;height:1px;}
+  .bts-zoom::after{width:1px;height:10px;}
+
+  /* ---------- statement de cierre ---------- */
+  .lab-statement{border-top:1px solid var(--fg-faint);padding:100px 0;text-align:center;}
+  .lab-statement p{
+    font-size:clamp(1.3rem, 2.4vw, 1.9rem);font-weight:700;letter-spacing:-0.01em;
+    max-width:26ch;margin:0 auto;color:var(--fg);
+  }
+  .lab-statement p em{font-style:normal;color:var(--accent);}
+  .lab-statement .cta{margin-top:36px;}
+
+  /* ---------- footer (idéntico a la Home) ---------- */
+  footer{padding:56px 0 40px;border-top:1px solid var(--fg-faint);}
+  .footer-inner{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:24px;}
+  .footer-links{display:flex;gap:26px;font-size:0.85rem;}
+  .footer-links a{color:var(--fg-dim);transition:color .2s;}
+  .footer-links a:hover{color:var(--accent);}
+  .footer-meta{font-size:0.75rem;color:var(--fg-dim);margin-top:6px;}
+
+  /* ---------- lightbox ---------- */
+  .lightbox{
+    position:fixed;inset:0;background:rgba(11,11,11,0.96);display:none;
+    align-items:center;justify-content:center;z-index:300;padding:40px;
+  }
+  .lightbox.open{display:flex;}
+  .lightbox-frame{
+    max-width:90vw;
+    max-height:85vh;
+    border:1px solid var(--fg-faint);
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#141414;
+  }
+  .lightbox-close{
+    position:absolute;top:-46px;right:0;background:none;border:1px solid var(--fg-faint);color:var(--fg);
+    width:38px;height:38px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  }
+  .lightbox-close:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:980px){ .bts-gallery{column-count:2;} }
+  @media (max-width:860px){
+    .nav-links{
+      position:fixed;top:64px;right:0;height:calc(100svh - 64px);width:78%;max-width:320px;
+      background:#0d0d0d;border-left:1px solid var(--fg-faint);
+      flex-direction:column;align-items:flex-start;justify-content:flex-start;
+      padding:40px 28px;gap:28px;transform:translateX(100%);transition:transform .3s ease;
+    }
+    .nav-links.open{transform:translateX(0);}
+    .nav-links .btn{margin-top:12px;}
+    .hamburger{display:flex;}
+    .bts-gallery{column-count:1;}
+    .wrap{padding:0 22px;}
+    .page-head{padding:120px 0 40px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="playhead" id="playhead"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">CASTILLO<span>CINE</span></a>
+    <nav class="nav-links" id="navLinks">
+      <a href="proyectos.html">Proyectos</a>
+      <a href="estudio.html" class="current">En el Estudio</a>
+      <a href="contacto.html">Contacto</a>
+      <a href="https://www.patreon.com/castillocine" target="_blank" rel="noopener noreferrer">Cursos</a>
+      <a href="calculadora.html" class="btn btn-solid">Cotizar mi proyecto</a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="wrap page-head">
+  <div class="eyebrow">00:00:00:00 / Detrás de Cámara</div>
+  <h1>En el Estudio</h1>
+  <p>El lado humano detrás de cada entrega: jornadas de edición, el setup real de trabajo y el proceso de producción que no se ve en el resultado final.</p>
+</div>
+
+<div class="wrap">
+  <div class="bts-gallery" id="btsGallery">
+
+    <div class="bts-card" data-h="portrait">
+      <div class="bts-media">
+        <img src="fotos/curso_ae.webp" alt="dando curso de ae" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Curso nocturno — Composición en After Effects</span></div>
+    </div>
+
+    <div class="bts-card" data-h="square">
+      <div class="bts-media">
+        <img src="fotos/animacion_ae.webp" alt="animación en after effects" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Animación mascota Zero — After Effects</span></div>
+    </div>
+
+    <div class="bts-card" data-h="wide">
+      <div class="bts-media">
+        <img src="fotos/curso_cinema.webp" alt="dando curso de cinema" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Curso de Cinema4D — Agencia de publicidad</span></div>
+    </div>
+
+    <div class="bts-card" data-h="tall">
+      <div class="bts-media">
+        <img src="fotos/curso_resolume.webp" alt="dando curso de resolume" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Curso de Resolume — Colegio Mater Salvatoris</span></div>
+    </div>
+
+    <div class="bts-card" data-h="square">
+      <div class="bts-media">
+        <img src="fotos/dirigiendo_toma.webp" alt="dirigiendo toma" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Dirigiendo toma — VideoClip Tu Calor</span></div>
+    </div>
+
+    <div class="bts-card" data-h="portrait">
+      <div class="bts-media">
+        <img src="fotos/grabacion_cristal.webp" alt="grabación película cristal" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Como asistente de dirección — Película Cristal</span></div>
+    </div>
+
+    <div class="bts-card" data-h="wide">
+      <div class="bts-media">
+        <img src="fotos/grabando_vfx.webp" alt="grabando vfx" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Grabando toma para VFX — Campaña B-Tox</span></div>
+    </div>
+
+    <div class="bts-card" data-h="square">
+      <div class="bts-media">
+        <img src="fotos/pauta_mater.webp" alt="pauta gaitas" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Pauta como VJ (videojockey)  — Gaitas Mater</span></div>
+    </div>
+
+    <div class="bts-card" data-h="tall">
+      <div class="bts-media">
+        <img src="fotos/post_sonido.webp" alt="postproducción de sonido" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Haciendo Postproducción de Sonido — Película Cristal</span></div>
+    </div>
+
+    <div class="bts-card" data-h="tall">
+      <div class="bts-media">
+        <img src="fotos/proyecto_ue.webp" alt="un proyecto en unreal engine" loading="lazy" class="bts-img">
+      </div>
+      <span class="bts-zoom"></span>
+      <div class="bts-caption"><span class="title">Trabajando en un proyecto — Unreal Engine</span></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="lab-statement">
+  <div class="wrap">
+    <p>Detrás de cada entrega hay <em>horas de foco</em> que no se ven en el resultado final.</p>
+    <div class="cta"><a href="proyectos.html" class="btn btn-ghost">Ver el resultado en los proyectos</a></div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div>
+      <div class="logo">CASTILLO<span>CINE</span></div>
+      <div class="footer-meta">Caracas, Venezuela — Disponible para proyectos remotos</div>
+    </div>
+    <nav class="footer-links">
+      <a href="proyectos.html">Proyectos</a>
+      <a href="estudio.html">En el Estudio</a>
+      <a href="contacto.html">Contacto</a>
+      <a href="https://www.patreon.com/castillocine" target="_blank" rel="noopener noreferrer">Cursos</a>
+    </nav>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-frame">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">✕</button>
+    <!-- Agregamos la etiqueta de imagen para que muestre la foto al tocarla -->
+    <img id="lightboxImg" src="" alt="Vista ampliada" style="width:100%; height:100%; object-fit:contain; display:block;">
+  </div>
+</div>
+
+<script>
+  const playhead = document.getElementById('playhead');
+  function updatePlayhead(){
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    playhead.style.width = scrolled + '%';
+  }
+  document.addEventListener('scroll', updatePlayhead, {passive:true});
+  updatePlayhead();
+
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => {
+    const open = navLinks.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded', open);
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', 'false');
+  }));
+
+ // Lightbox dinámico
+  const lightbox = document.getElementById('lightbox');
+  const lightboxClose = document.getElementById('lightboxClose');
+  const lightboxImg = document.getElementById('lightboxImg');
+
+  document.querySelectorAll('.bts-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const img = card.querySelector('img');
+      if (img && img.src) {
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt || '';
+        lightboxImg.style.display = 'block';
+      } else {
+        lightboxImg.src = '';
+        lightboxImg.style.display = 'none';
+      }
+      lightbox.classList.add('open');
+    });
+  });
+
+  lightboxClose.addEventListener('click', () => lightbox.classList.remove('open'));
+  lightbox.addEventListener('click', (e) => { 
+    if (e.target === lightbox) lightbox.classList.remove('open'); 
+  });
+</script>
+
+</body>
+</html>
